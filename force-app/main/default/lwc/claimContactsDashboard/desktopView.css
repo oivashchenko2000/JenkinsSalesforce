@@ -1,0 +1,14 @@
+.current_filter {
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+	font-size: 1.3rem;
+	font-weight: bold;
+	line-height: 1.25;
+	display: block;
+	cursor: pointer;
+}
+
+.current_filter:hover {
+	text-decoration: underline;
+}

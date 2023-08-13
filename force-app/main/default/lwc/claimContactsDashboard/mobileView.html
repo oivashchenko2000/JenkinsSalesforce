@@ -1,0 +1,133 @@
+<template>
+	<lightning-card>
+		<div class="slds-grid slds-wrap slds-var-p-around_medium">
+			<template if:true={showSpinner}>
+				<lightning-spinner alternative-text="Loading" size="medium"></lightning-spinner>
+			</template>
+			<div class="slds-col slds-small-size_1-of-1 slds-size_1-of-1 slds-no-flex">
+				<lightning-button-menu alternative-text="Actions" label="Actions" onselect={handleActionSelect} class="slds-float_right" menu-alignment="auto">
+					<template if:true={isAdditionalButtonsVisible}>
+						<template if:true={isHotBucketFilter}>
+							<lightning-menu-item value="moveToColdBucket" label="Move to Cold Bucket" disabled={isAdditionalButtonsDisabled}></lightning-menu-item>
+						</template>
+						<template if:true={isColdBucketFilter}>
+							<lightning-menu-item value="moveToHotBucket" label="Move to Hot Bucket" disabled={isAdditionalButtonsDisabled}></lightning-menu-item>
+						</template>
+						<lightning-menu-item value="massChangeOwner" label="Mass Change Owner" disabled={isAdditionalButtonsDisabled}></lightning-menu-item>
+					</template>
+					<lightning-menu-item value="claimContact" label="Claim Contact" disabled={isClaimButtonDisabled}></lightning-menu-item>
+				</lightning-button-menu>
+			</div>
+			<div class="slds-col slds-small-size_1-of-1 slds-size_1-of-1 slds-var-m-top_small">
+				<div class="slds-grid slds-wrap">
+					<div class="slds-col slds-small-size_1-of-6 slds-size_1-of-6">
+						<lightning-icon slot="media" icon-name="standard:contact" size="large"></lightning-icon>
+					</div>
+					<div class="slds-col slds-form-element slds-small-size_5-of-6 slds-size_5-of-6 slds-var-p-top_medium">
+						<div class="slds-form-element__control">
+							<div class="slds-combobox_container slds-size_medium">
+								<div class={dropdownTriggerClass} aria-expanded="false" aria-haspopup="listbox" role="combobox">
+									<div
+										class="slds-combobox__form-element slds-input-has-icon slds-input-has-icon_right"
+										role="none"
+										onclick={handleClickExtend}>
+										<span class="current_filter">
+											{currentFilter}
+											<lightning-icon
+												class="slds-button__icon slds-icon-utility-down slds-icon_container slds-var-m-left_x-small forceIcon"
+												icon-name="utility:down"
+												size="x-small">
+											</lightning-icon>
+										</span>
+									</div>  
+									<div id="listbox-id-1" class="slds-dropdown slds-dropdown_length-5 slds-dropdown_fluid" role="listbox">
+										<ul class="slds-listbox slds-listbox_vertical" role="presentation">
+											<template for:each={filterOptions} for:item="option">
+												<li role="presentation" class="slds-listbox__item" key={option.value}>
+													<div class="slds-media slds-listbox__option slds-listbox__option_plain" data-filter={option.value} onclick={handleFilterChangeButton}>
+														<span class="slds-media__body" data-filter={option.value}>
+															<span class="slds-truncate" data-filter={option.value}>{option.label}</span>
+														</span>
+													</div>
+												</li>
+											</template>
+										</ul>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			<template for:each={contacts} for:item="contact">
+				<div key={contact.id} class="slds-col slds-small-size_1-of-1 slds-size_1-of-1">
+					<div class="slds-grid slds-wrap slds-var-p-around_small">
+						<div class="slds-col slds-small-size_1-of-8 slds-size_1-of-8 slds-align_absolute-center">
+							<lightning-input type="checkbox" onchange={handleMobileCheckbox} value={contact.id}></lightning-input>
+						</div>
+						<div class="slds-col slds-small-size_7-of-8 slds-size_7-of-8 slds-border_bottom">
+							<div class="slds-grid slds-wrap slds-var-p-top_small">
+								<div class="slds-col slds-truncate slds-small-size_1-of-1 slds-size_1-of-1"><strong>{contact.name}</strong></div>
+								<div class="slds-col slds-small-size_3-of-5 slds-size_3-of-5 slds-var-m-top_small slds-truncate">Mailing Zip/Postal Code:</div>
+								<div class="slds-col slds-small-size_2-of-5 slds-size_2-of-5 slds-var-m-top_small slds-truncate">{contact.zipCode}</div>
+								<div class="slds-col slds-small-size_2-of-5 slds-size_2-of-5 slds-var-m-top_small">Sub Territory:</div>
+								<div class="slds-col slds-small-size_3-of-5 slds-size_3-of-5 slds-var-m-top_small slds-truncate">{contact.subTerritory}</div>
+								<div class="slds-col slds-small-size_2-of-5 slds-size_2-of-5 slds-var-m-top_small">Created Date:</div>
+								<lightning-formatted-date-time
+									class="slds-col slds-small-size_3-of-5 slds-size_3-of-5 slds-var-m-top_small slds-var-m-bottom_medium"
+									value={contact.createdDate}
+									year="numeric"
+									month="numeric"
+									day="numeric"
+									hour="2-digit"
+									minute="2-digit"
+									hour12="true">
+								</lightning-formatted-date-time>
+							</div>
+						</div>
+					</div>
+				</div>
+			</template>
+		</div>
+		<template if:true={showMassChangeOwnerModal}>
+			<section role="dialog" tabindex="-1" aria-modal="true" aria-label="Mass Change Contact Owner" class="slds-modal slds-fade-in-open">
+				<div class="slds-modal__container">
+					<div class="slds-is-relative">
+						<template if:true={showModalSpinner}>
+							<lightning-spinner alternative-text="Loading" size="small"></lightning-spinner>
+						</template>
+						<div class="slds-modal__content slds-var-p-around_medium slds-grid slds-wrap slds-grid_vertical-align-center slds-scrollable_none" style="overflow: visible;">
+							<div class="slds-col slds-size_full slds-var-m-bottom_medium">
+								<h5 class="slds-text-title_bold">Mass Change Contact Owner</h5>
+							</div>
+							<div class="slds-col slds-size_full slds-var-m-bottom_medium">
+								<p>
+									You are going to change the Owner for <strong>{selectedContactCount}</strong> contact(s). All releated Account records will also associated with the new Owner.
+									Please allow a few minutes for the contacts to transfer after clicking "Change Owner"
+								</p>
+							</div>
+							<div class="slds-col slds-size_full slds-align_absolute-center slds-var-m-bottom_large slds-grid slds-grid_vertical-align-center">
+								<div class="slds-col slds-size_1-of-3 slds-var-p-right_xxx-small">New Owner <span class="slds-text-color_error">*</span></div>
+								<div class="slds-col slds-size_2-of-3">
+									<c-custom-lookup
+										obj-name="User"
+										icon-name="standard:user"
+										filter="isActive = true"
+										fields="User.Name"
+										onvalueselect={handleSelectedOwner}
+										value-id={selectedOwnerId}>
+									</c-custom-lookup>
+								</div>
+							</div>
+							<div class="slds-col slds-size_full slds-align_absolute-center">
+								<lightning-button variant="brand-outline" label="Cancel" title="Cancel" class="slds-var-p-right_x-small" onclick={closeMassChangeOwnerModal}></lightning-button>
+								<lightning-button variant="brand" label="Change Owner" title="Change Owner" onclick={handleMassChangeOwner}></lightning-button>
+							</div>
+						</div>
+					</div>
+				</div>
+			</section>
+			<div class="slds-backdrop slds-backdrop_open" role="presentation"></div>
+		</template>
+	</lightning-card>
+</template>
